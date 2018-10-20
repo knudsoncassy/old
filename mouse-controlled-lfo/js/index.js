@@ -1,11 +1,13 @@
 /*
-  The LFO controls the frequency of the sound.
+  The LFO controls the gain of the sound.
+  
+  Mouse Controlled LFO 2:
+  https://codepen.io/DonKarlssonSan/pen/jPGNqw
 */
 
 var audioContext;
 var soundOscillator;
-var lfo;
-var lfoGain;
+var gainOscillator;
 var gainNode;
 var isPlaying = false;
 
@@ -17,34 +19,22 @@ function initSound() {
 
   // Oscillator for sound
   soundOscillator = audioContext.createOscillator();
-  soundOscillator.type = "sine";
+  soundOscillator.type = "square";
   soundOscillator.frequency.value = 0;
   soundOscillator.start(0);
 
-  // LFO
-  // Used for changing the frequency of the sound
-  // oscillator.
-  lfo = audioContext.createOscillator();
-  lfo.type = "sine";
-  lfo.frequency.value = 0;
-  lfo.start(0);
-  
-  // Controls the amplitude of LFO applied.
-  // An oscillator node produces values
-  // in the 0 - 1 range. By applying a
-  // gain of 200 to the LFO we can make
-  // it produce values in the 0 - 200
-  // range.
-  lfoGain = audioContext.createGain(); 
-  lfoGain.gain.value = 200;
+  // Oscillator for volume/gain
+  gainOscillator = audioContext.createOscillator();
+  gainOscillator.type = "sine";
+  gainOscillator.frequency.value = 0;
+  gainOscillator.start(0);
   
   // Controls the volume
   gainNode = audioContext.createGain();
   
   // Wire them up
-  lfo.connect(lfoGain);
-  lfoGain.connect(soundOscillator.frequency);
   soundOscillator.connect(gainNode);
+  gainOscillator.connect(gainNode.gain);
   gainNode.connect(audioContext.destination);
 }
 
@@ -55,7 +45,7 @@ function toggleSound(toggleButton) {
     toggleButton.innerHTML = "<h3>Stop</h3>"
   } else {
     soundOscillator.frequency.value = 0;
-    lfo.frequency.value = 0;
+    gainOscillator.frequency.value = 0;
     gainNode.gain.value = 0;
     toggleButton.innerHTML = "<h3>Start</h3>"    
   }
@@ -64,10 +54,10 @@ function toggleSound(toggleButton) {
 function onMousemove(event) {
   if(isPlaying) {
     var lfoFrequency = Math.round(event.clientX / window.innerWidth * 30);
-    lfo.frequency.value = lfoFrequency;
+    gainOscillator.frequency.value = lfoFrequency;
     lfoFrequencySpan.innerHTML = lfoFrequency;
 
-    var soundFrequency = Math.round(event.clientY / window.innerHeight * 1000) + 200;
+    var soundFrequency = Math.round(event.clientY / window.innerHeight * 1000);
     soundOscillator.frequency.value = soundFrequency;
     soundFrequencySpan.innerHTML = soundFrequency;
   }
@@ -76,21 +66,7 @@ function onMousemove(event) {
 function initControls() {
   soundFrequencySpan = document.getElementById("soundFrequency");
   lfoFrequencySpan = document.getElementById("lfoFrequency");
-  
-  var lfoAmplitudeSlider = document.getElementById("lfoAmplitudeSlider");
-
-  var lfoAmplitudeSpan = document.getElementById("lfoAmplitude");
-  
   document.addEventListener("mousemove", onMousemove, false);
-   lfoAmplitudeSlider.addEventListener("change", function () {
-    lfoGain.gain.value = this.value; 
-    lfoAmplitudeSpan.innerHTML = this.value;
-  });
-  lfoAmplitudeSlider.addEventListener("mousemove", function () {
-    lfoGain.gain.value = this.value; 
-    lfoAmplitudeSpan.innerHTML = this.value;
-  });
-
 }
 
 function init() {
